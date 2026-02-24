@@ -30,39 +30,71 @@ public class UserController extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
-		String action = request.getParameter("action");
+		 HttpSession session = request.getSession(false);
+		
+	    if (session == null) {
+	    	
+	    	HttpSession newSession = request.getSession(true);
+			
+	        ErrorMessages.setErrorMessage(newSession, "session");
+		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+		    return;
+
+	    }
+		
 		
 		if(dataSource == null ) {
-			request.getRequestDispatcher("/UsersView/loginUsers.jsp").forward(request, response);
+			ErrorMessages.setErrorMessage(session, "DB");
+			response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
 			return;
 		}
 		
-		db = DBConnection.getInstance(dataSource);
-		
-		UsersImp user = new UsersImp(db);
-		
-		switch(action) {
-		case "login":
-			login(request , response , user);
-			break;
-		case "signup":
-			signUp(request , response , user);
-			break;
-		case"logout":
-			logOut(request , response);
-			break;
-		case"deleteAccount":
-			deleteAccount(request , response , user);
-			break;
-		case"changePassword":
-			changePassword(request , response , user);
-			break;
-		case"getUsername":
+		try {
 			
-			break;
-		default:
-			request.getRequestDispatcher("/UsersView/loginUsers.jsp").forward(request, response);
+			String action = request.getParameter("action");
+			db = DBConnection.getInstance(dataSource);
+			
+			
+			if(action == null) {
+				response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+				return;
+			}
+			
+			UsersImp user = new UsersImp(db);
+			
+			switch(action) {
+			case "login":
+				login(request , response , user);
+				break;
+			case "signup":
+				signUp(request , response , user);
+				break;
+			case"logout":
+				logOut(request , response);
+				break;
+			case"deleteAccount":
+				deleteAccount(request , response , user);
+				break;
+			case"changePasswordView":
+				changePasswordView(request , response);
+				break;
+			case"changePassword":
+				changePassword(request , response , user);
+				break;
+			default:
+				response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+			}
+			
+			
+		}catch(IOException | ServletException e  ) {
+			System.err.println("Critical Error in UserController: " + e.getMessage());
+			response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
 		}
+		
+
+		
+		
+
 		
 	}
 
@@ -76,41 +108,37 @@ public class UserController extends HttpServlet {
 	
 	
 	
-	private void login(HttpServletRequest request, HttpServletResponse response , UsersImp userService){
-		
-		
-		String userName = request.getParameter("username");
-		String password = request.getParameter("password");
-		
-		
-		Users user = userService.login(userName, password);
-		
+	private void login(HttpServletRequest request, HttpServletResponse response, UsersImp userService) throws IOException {
+	    String userName = request.getParameter("username");
+	    String password = request.getParameter("password");
+
+	    // 1. Authenticate user
+	    Users user = userService.login(userName, password);
 
 	    if (user == null) {
-	    	
+	        // Handle failed login
 	        HttpSession session = request.getSession(true);
-	        session.setAttribute("flashMessage", "Username or Password is Incorrect");
-	        session.setAttribute("flashType", "error");
-	       
-	        
-	        try {
-	        	response.sendRedirect(request.getContextPath() + "/UsersView/loginUsers.jsp");
-	        } catch (Exception e) {
-	            e.printStackTrace();
-	        } 
-		       
+	        ErrorMessages.setErrorMessage(session, "login");
+	        response.sendRedirect(request.getContextPath() + "/UsersView/loginUsers.jsp");
 	        return;
 	    }
-	    
-	    HttpSession session = request.getSession(true); // true = create if not exists
-	    session.setAttribute("userId", user.getId());           
 
-	    try {
-	        response.sendRedirect(request.getContextPath() + "/ItemsController");
-	    } catch (IOException e) {
-	        e.printStackTrace();
+	    // 2. Security: Invalidate current session to prevent Session Fixation
+	    HttpSession oldSession = request.getSession(false);
+	    if (oldSession != null) {
+	        oldSession.invalidate();
 	    }
 
+	    // 3. Create fresh session and store user data
+	    HttpSession newSession = request.getSession(true);
+	    newSession.setAttribute("userId", user.getId());
+	    
+	    newSession.setAttribute("flashType", "success");
+	    newSession.setAttribute("flashMessage", "Welcome back, " + user.getUserName() + "!");
+	    
+
+	    // 4. Redirect to the landing page
+	    response.sendRedirect(request.getContextPath() + "/ItemsController");
 	}
 	
 	
@@ -121,12 +149,19 @@ public class UserController extends HttpServlet {
 	    
 	    HttpSession session = request.getSession(false);
 
-	    if (session != null) {
-	       
-	        session.removeAttribute("userId"); 
-	       
-	        session.invalidate();
+	    if (session == null) {
+	    	
+	    	HttpSession newSession = request.getSession(true);
+			
+	        ErrorMessages.setErrorMessage(newSession, "session");
+		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+		    return;
+
 	    }
+	    
+        session.removeAttribute("userId"); 
+        session.invalidate();
+        
 	    HttpSession newSession = request.getSession(true);
 	    newSession.setAttribute("flashMessage", "You have been logged out successfully.");
 	    newSession.setAttribute("flashType", "success");
@@ -141,48 +176,55 @@ public class UserController extends HttpServlet {
 	private void deleteAccount(HttpServletRequest request, HttpServletResponse response , UsersImp user) throws IOException {
 		HttpSession session = request.getSession(false);
 		
-		int userId = (int)session.getAttribute("userId"); 
 	
 		if (session == null || session.getAttribute("userId") == null) {
-		    try {
-		    	response.sendRedirect(request.getContextPath() + "/UsersView/loginUsers.jsp");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			
+			
+			HttpSession newSession = request.getSession(true);
+			
+	        ErrorMessages.setErrorMessage(newSession, "session");
+		    response.sendRedirect(request.getContextPath() +"/errors/serverError.jsp");
 		    return;
 		}
 		
-		if(!user.deleteAccount(userId)) {
-			HttpSession newSession = request.getSession(true);
-		    newSession.setAttribute("flashMessage", "Something Went Wrong");
-		    newSession.setAttribute("flashType", "error");
-		    return;
+		int userId = (int)session.getAttribute("userId"); 
+		
+		if(user.deleteAccount(userId)) {
+			
+			session.setAttribute("flashType", "success");
+			session.setAttribute("flashMessage", "The Account Has Been Deleted Successfully" );
+			session.removeAttribute("userId");
+			response.sendRedirect(request.getContextPath() + "/UsersView/loginUsers.jsp");
+		   
+		}else {
+			ErrorMessages.setErrorMessage(session, "delete");
+			response.sendRedirect(request.getContextPath() + "/ItemsController");
 		}
-        session.removeAttribute("userId"); 
-        session.invalidate();
-        
-        
-		HttpSession newSession = request.getSession(true);
-	    newSession.setAttribute("flashMessage", "Your Account has been deleted Successfully");
-	    newSession.setAttribute("flashType", "success");
-	    response.sendRedirect(request.getContextPath() + "/UsersView/loginUsers.jsp");
+		
+		
+	    
 	}
 	
 	
 	
 	
+	private void changePasswordView(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		response.sendRedirect(request.getContextPath() + "/UsersView/changePassword.jsp");
+	}
+	
+	
 	private void changePassword(HttpServletRequest request, HttpServletResponse response , UsersImp user) throws IOException, ServletException{
 		
+		String errorKey = null ;
+		
 		HttpSession session = request.getSession(false);
-		if (session == null || session.getAttribute("userId") == null) {
-		    try {
-				session.setAttribute("flashType", "error");
-				request.getSession().setAttribute("flashMessage", "Something Went Wrong-1");
-		    	response.sendRedirect(request.getContextPath() + "/UsersView/loginUsers.jsp");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		    return;
+		
+		if (session == null || session.getAttribute("userId") == null) {	
+				HttpSession newSession = request.getSession(true);
+				errorKey = "session";
+		        ErrorMessages.setErrorMessage(newSession, errorKey);
+		        response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+		    	return;
 		}
 		
 		int id = (int)session.getAttribute("userId");
@@ -190,91 +232,81 @@ public class UserController extends HttpServlet {
 		String confirmPassword = request.getParameter("confirmPassword");
 		String newPassword = request.getParameter("newPassword");
 		
-		if(!user.getPassword(oldPassword,id) || !user.signUpPassword(newPassword) || !user.checkpassword(confirmPassword, newPassword) 
-				|| user.checkpassword(oldPassword, newPassword)) {
-			session.setAttribute("flashType", "error");
-			request.getSession().setAttribute("flashMessage", "Something Went Wrong-2");
-			response.sendRedirect(request.getContextPath() + "/ItemsController");
-			return;
+		if (!user.getPassword(oldPassword, id)) {
+			errorKey = "ErrorPassword";
+	    } else if (!user.signUpPassword(newPassword)) {
+	    	errorKey = "Password";
+	    } else if (!user.checkpassword(confirmPassword, newPassword)) {
+	    	errorKey = "confirmPW";
+	    } else if (user.checkpassword(oldPassword, newPassword)) {
+	    	errorKey = "MatchPW";
+	    }
+		
+		if(errorKey != null) {
+	        ErrorMessages.setErrorMessage(session, errorKey);
+	        response.sendRedirect(request.getContextPath() + "/UsersView/changePassword.jsp");
+	        return;
 		}
 		
-		if(!user.changePassword(id,newPassword)) {
-			session.setAttribute("flashType", "error");
-			request.getSession().setAttribute("flashMessage", "Something Went Wrong-3");
+		if(user.changePassword(id,newPassword)) {
+			
+			session.setAttribute("flashType", "success");
+			request.getSession().setAttribute("flashMessage", "Your password has been changed");
 			response.sendRedirect(request.getContextPath() + "/ItemsController");
-			return;
+
+		}else {
+			errorKey = "delete";
+			ErrorMessages.setErrorMessage(session, errorKey);
+			response.sendRedirect(request.getContextPath() + "/UsersView/changePassword.jsp");
 		}
-		
-		session.setAttribute("flashType", "success");
-		request.getSession().setAttribute("flashMessage", "Your password has been changed");
-		response.sendRedirect(request.getContextPath() + "/ItemsController");
-		
 		
 	}
 	
-	
 
-	
-	
-	
-	
+	private void signUp(HttpServletRequest request, HttpServletResponse response, UsersImp userService) throws IOException {
+	    HttpSession session = request.getSession();
 
-	
-	private void signUp(HttpServletRequest request, HttpServletResponse response , UsersImp user) {
-		
-		ErrorMessages error = new ErrorMessages();
-
+	    // 1. Extract Parameters
 	    String firstName = request.getParameter("firstname");
-	    if (!user.signUpName(firstName)) {
-	        error.redirect(request, response, "firstname");
-	        return;
-	    }
-
-	    String lastName = request.getParameter("lastname");
-	    if (!user.signUpName(lastName)) {
-	        error.redirect(request, response, "lastname");
-	        return;
-	    }
-
-	    String userName = request.getParameter("username");
-	    if (user.signUpUN(userName) || !user.signUpName(userName) ) { 
-	        error.redirect(request, response, "username");
-	        return;
-	    }
-
-	    String password = request.getParameter("password");
-	    if (!user.signUpPassword(password)) {
-	        error.redirect(request, response, "password");
-	        return;
-	    }
-
+	    String lastName  = request.getParameter("lastname");
+	    String userName  = request.getParameter("username");
+	    String email     = request.getParameter("email");
+	    String password  = request.getParameter("password");
 	    String confirmPW = request.getParameter("confirmPassword");
-	    if (!user.checkpassword(confirmPW, password)) {
-	        error.redirect(request, response, "confirmPW");
+
+	    // 2. Validation Chain (Fail Fast)
+	    String errorKey = null;
+
+	    if (!userService.signUpName(firstName)) {
+	        errorKey = "firstname";
+	    } else if (!userService.signUpName(lastName)) {
+	        errorKey = "lastname";
+	    } else if (!userService.signUpName(userName) || userService.signUpUN(userName)) {
+	        errorKey = "username";
+	    } else if (!userService.checkEmail(email) || userService.signUpEmail(email)) {
+	        errorKey = "email";
+	    } else if (!userService.signUpPassword(password)) {
+	        errorKey = "password";
+	    } else if (!userService.checkpassword(confirmPW, password)) {
+	        errorKey = "confirmPW";
+	    }
+
+	    // 3. Handle Validation Errors
+	    if (errorKey != null) {
+	        ErrorMessages.setErrorMessage(session, errorKey);
+	        response.sendRedirect(request.getContextPath() + "/UsersView/signUp.jsp");
 	        return;
 	    }
 
-	    String email = request.getParameter("email");
-	    if (user.signUpEmail(email) || !user.checkEmail(email)) { 
-	        error.redirect(request, response,  "email");
-	        return;
-	    }
+	    // 4. Attempt Database Insertion
 
-	    boolean addedData = user.addingData(firstName, lastName, userName, email, password);
-	    if (!addedData) {
-	        error.redirect(request, response,"data");
-	        return;
+	    if (userService.addingData(firstName, lastName, userName, email, password)) {
+	        session.setAttribute("flashType", "success");
+	        session.setAttribute("flashMessage", "Account created successfully! Please log in.");
+	        response.sendRedirect(request.getContextPath() + "/UsersView/loginUsers.jsp");
+	    } else {
+	        ErrorMessages.setErrorMessage(session, "data");
+	        response.sendRedirect(request.getContextPath() + "/UsersView/signUp.jsp");
 	    }
- 
-		
-        try {
-        	request.setAttribute("successMessage", "User has been added successfully!");
-			request.getRequestDispatcher("/UsersView/loginUsers.jsp").forward(request, response);
-		} catch (ServletException | IOException e) {
-			e.printStackTrace();
-		}
-		
-		
 	}
-
 }

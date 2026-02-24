@@ -347,6 +347,25 @@ form {
     position: relative;
     color: transparent;
 }
+/* Notification Styles */
+.msg-container {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 30px;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 2000;
+}
+.msg-success {
+    background: linear-gradient(45deg, #4CAF50, #8BC34A);
+}
+.msg-error {
+    background: linear-gradient(45deg, #f44336, #FF9800);
+}
 
 .button.loading::after {
     content: '';
@@ -373,7 +392,35 @@ form {
   <div class="text">
     Update Item
   </div>
+  
+  
+   	<% 
+        String flashMessage = (String) session.getAttribute("flashMessage");
+        String errorMessage = (String) session.getAttribute("errorMessage");
+
+        if (flashMessage != null) { 
+    %>
+        <div class="msg-container msg-success" id="notif">
+            <%= flashMessage %>
+        </div>
+    <% 
+        session.removeAttribute("flashMessage"); 
+        } 
+        
+        if (errorMessage != null) { 
+    %>
+        <div class="msg-container msg-error" id="notif">
+            <%= errorMessage %>
+        </div>
+    <% 
+        session.removeAttribute("errorMessage"); 
+        } 
+    %>
+  
 <form id="updateItem" action="/shopProject/ItemsController" method="POST">
+	<%  session = request.getSession(false);
+		session.getAttribute("item");
+	%>
     <div class="form-row">    
         <div class="input-data">
             <input type="text" id="name" name="name" value="${item.name}" readonly>
@@ -410,8 +457,21 @@ form {
   <p class="back">
     <a href="${pageContext.request.contextPath}/ItemsController">Back To Items</a>
   </p>
+  
+  
 </div>
 
+
+<script>
+const notif = document.getElementById('notif');
+if (notif) {
+    setTimeout(() => {
+        notif.style.transition = "opacity 0.5s ease";
+        notif.style.opacity = "0";
+        setTimeout(() => notif.remove(), 500);
+    }, 4000); 
+}
+</script>
 
 </body>
 </html>

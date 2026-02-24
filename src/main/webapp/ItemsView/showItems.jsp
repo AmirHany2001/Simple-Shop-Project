@@ -184,6 +184,25 @@
             background: none;
             cursor: pointer;
         }
+        /* Notification Styles */
+		.msg-container {
+		    position: fixed;
+		    bottom: 20px;
+		    left: 50%;
+		    transform: translateX(-50%);
+		    padding: 15px 30px;
+		    border-radius: 10px;
+		    color: white;
+		    font-weight: 600;
+		    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+		    z-index: 2000;
+		}
+		.msg-success {
+		    background: linear-gradient(45deg, #4CAF50, #8BC34A);
+		}
+		.msg-error {
+		    background: linear-gradient(45deg, #f44336, #FF9800);
+		}
         .toggle-btn {
             position: fixed;
             top: 20px;
@@ -216,7 +235,7 @@
 <div id="sidePanel" class="side-panel">
     <button class="close-btn" onclick="togglePanel()">×</button>
     <h2>User Settings</h2>
-    <a href="${pageContext.request.contextPath}//UsersView/changePassword.jsp">Change Password</a>
+    <a href="${pageContext.request.contextPath}/UserController?action=changePasswordView">Change Password</a>
     <a href="${pageContext.request.contextPath}/UserController?action=logout">Logout</a>
     <a href="${pageContext.request.contextPath}/UserController?action=deleteAccount">Delete Account</a>
 </div>
@@ -239,56 +258,74 @@
             </tr>
         </thead>
         <tbody>
-            <%
-                List<Items> items = (List<Items>) request.getAttribute("allItems");
-                if(items != null && !items.isEmpty()){
-                    for(Items item : items){
-            %>
-            <tr>
-                <td><%=item.getId() %></td>
-                <td><%=item.getName() %></td>
-                <td><%=item.getPrice() %></td>
-                <td><%=item.getTotalNumbers() %></td>
-                <td><%=item.getUserId() %></td>
-                <td>
-                    <a href="${pageContext.request.contextPath}/ItemsController?action=getItem&id=<%=item.getId()%>">Update</a>
-                    <a href="${pageContext.request.contextPath}/ItemsController?action=removeItem&id=<%=item.getId()%>">Delete</a>
-                </td>
-            </tr>
-            <% } } %>
-        </tbody>
+			    <%
+			        // Look in sessionScope instead of requestAttribute
+			        List<Items> items = (List<Items>) session.getAttribute("allItems");
+			        
+			        if(items != null && !items.isEmpty()){
+			            for(Items item : items){
+
+			    %>
+			    <tr>
+			        <td><%=item.getId() %></td>
+			        <td><%=item.getName() %></td>
+			        <td><%=item.getPrice() %></td>
+			        <td><%=item.getTotalNumbers() %></td>
+			        <td><%=item.getUserId() %></td>
+			        <td>
+			            <a href="${pageContext.request.contextPath}/ItemsController?action=getItem&id=<%=item.getId()%>&actiontype=updateItem">Update</a>
+			            <a href="${pageContext.request.contextPath}/ItemsController?action=getItem&id=<%=item.getId()%>&actiontype=removeItem">Delete</a>
+			        </td>
+			    </tr>
+			    <% 
+			            } 
+			        } else { 
+			    %>
+			    <tr>
+			        <td colspan="6" style="text-align:center; padding: 30px;">
+			            <strong>No items found in session.</strong>
+			        </td>
+			    </tr>
+			    <% } %>
+		</tbody>
     </table>
     
-    <c:if test="${not empty sessionScope.flashMessage}">
-		    <div id="flashMessage"
-		         class="flash ${sessionScope.flashType}">
-		        ${sessionScope.flashMessage}
-		    </div>
-		
-		    <script>
-		        setTimeout(() => {
-		            const msg = document.getElementById("flashMessage");
-		            if (msg) {
-		                msg.style.opacity = "0";
-		                setTimeout(() => msg.style.display = "none", 500);
-		            }
-		        }, 3000);
-		    </script>
-		
-		    <!-- ❌ REMOVE immediately so it appears ONCE -->
-		    <c:remove var="flashMessage" scope="session"/>
-		    <c:remove var="flashType" scope="session"/>
-		</c:if>
-
     <button class="f">
         <a href="${pageContext.request.contextPath}/ItemsView/addItems.jsp">Add Item</a>
     </button>
+    
+    <% 
+        String flashMessage = (String) session.getAttribute("flashMessage");
+        String errorMessage = (String) session.getAttribute("errorMessage");
+
+        if (flashMessage != null) { 
+    %>
+        <div class="msg-container msg-success" id="notif">
+            <%= flashMessage %>
+        </div>
+    <% 
+        session.removeAttribute("flashMessage"); 
+        } 
+        
+        if (errorMessage != null) { 
+    %>
+        <div class="msg-container msg-error" id="notif">
+            <%= errorMessage %>
+        </div>
+    <% 
+        session.removeAttribute("errorMessage"); 
+        } 
+    %>
+    
 </div>
+
+
 
 <script>
 function togglePanel() {
     const panel = document.getElementById("sidePanel");
     const layer = document.getElementById("mainLayer");
+    
     if(panel.style.width === "250px") {
         panel.style.width = "0";
         layer.style.marginRight = "0";
@@ -296,6 +333,16 @@ function togglePanel() {
         panel.style.width = "250px";
         layer.style.marginRight = "250px";
     }
+} 
+
+
+const notif = document.getElementById('notif');
+if (notif) {
+    setTimeout(() => {
+        notif.style.transition = "opacity 0.5s ease";
+        notif.style.opacity = "0";
+        setTimeout(() => notif.remove(), 500);
+    }, 4000); 
 }
 </script>
 </body>

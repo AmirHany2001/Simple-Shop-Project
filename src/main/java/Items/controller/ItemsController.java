@@ -29,47 +29,67 @@ public class ItemsController extends HttpServlet {
 	private DBConnection db ; 
 	
 	
-	List<Items>items = null ;
-	
-	
 	
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		String action = request.getParameter("action");
-		if(dataSource == null ) {
-			request.getRequestDispatcher("/UsersView/loginUsers.jsp").forward(request, response);
+		
+
+		 
+		 HttpSession session = request.getSession(false);
+		 
+		
+	    if (session == null) {
+	    	
+	    	HttpSession newSession = request.getSession(true);
 			
+	        ErrorMessages.setErrorMessage(newSession, "session");
+		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+		    return;
+
+	    }
+		
+		
+		if(dataSource == null ) {
+			ErrorMessages.setErrorMessage(session, "DB");
+			response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
 			return;
 		}
 		
-		db = DBConnection.getInstance(dataSource);
 		
-		ItemsImp item = new ItemsImp(db);
-		
-	    if (action == null) {
-	        items = item.getItems();
-	        request.setAttribute("allItems", items);
-	        request.getRequestDispatcher("/ItemsView/showItems.jsp").forward(request, response);
-	        return;
-	    }
-		
-		switch(action) {
-		case "addItem":
-			addItems(request,response,item);
-			break;
-		case"updateItem":	
-			updateItem(request,response,item);
-			break;
-		case"getItem":
-			getItem(request,response,item);
-			break;
-		case"removeItem":
-			removeItem(request,response,item);
-			break;
-		default:
-			items = item.getItems();
-			request.setAttribute("allItems", items);
-			request.getRequestDispatcher("/ItemsView/showItems.jsp").forward(request, response);
+		try {
+			
+			 db = DBConnection.getInstance(dataSource);
+			
+			 String action = request.getParameter("action");
+			 ItemsImp item = new ItemsImp(db);
+			
+			if(action == null) {
+				listItems(request,response ,item );
+				return;
+			}
+			
+			
+			switch(action) {
+			case "addItem":
+				addItems(request,response,item);
+				break;
+			case"updateItem":	
+				updateItem(request,response,item);
+				break;
+			case"getItem":
+				getItem(request,response,item);
+				break;
+			case"removeItem":
+				removeItem(request,response,item);
+				break;
+			default:
+				response.sendRedirect(request.getContextPath() + "/errors/itemError.jsp");
+			}
+			
+			
+		}catch( IOException e  ) {
+			System.err.println("Critical Error in UserController: " + e.getMessage());
+			response.sendRedirect(request.getContextPath() + "/errors/itemError.jsp");
 		}
 		
 	}
@@ -83,119 +103,191 @@ public class ItemsController extends HttpServlet {
 	
 	
 	
-	private void addItems(HttpServletRequest request, HttpServletResponse response , ItemsImp item) {
+	private void listItems (HttpServletRequest request, HttpServletResponse response , ItemsImp item) throws ServletException,IOException {
 		
+		
+		HttpSession session = request.getSession(false);
+    	
+		List<Items> items = item.getItems();
+		
+		session.setAttribute("allItems", items);
+		response.sendRedirect(request.getContextPath() + "/ItemsView/showItems.jsp");
+		
+	}
+	
+	
+	private void addItems(HttpServletRequest request, HttpServletResponse response , ItemsImp item)throws ServletException,IOException {
+		
+		
+		String errorKey = null;
 		String name = request.getParameter("name");
 		String price = request.getParameter("price");
 		String totalNumber = request.getParameter("totalNumber");
 		
 		HttpSession session = request.getSession(false);
-		if (session == null || session.getAttribute("userId") == null) {
-		    try {
-		    	response.sendRedirect(request.getContextPath() + "/UsersView/loginUsers.jsp");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		
+		
+		
+	    if (session == null || session.getAttribute("userId") == null) {
+	    	
+	    	HttpSession newSession = request.getSession(true);
+			
+	        ErrorMessages.setErrorMessage(newSession, "session");
+		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+		    return;
+
+	    }
+
+		Object objUserId = session.getAttribute("userId");
+		
+		if(objUserId == null) {
+			ErrorMessages.setErrorMessage(session, "data");
+		    response.sendRedirect(request.getContextPath() + "/errors/itemError.jsp");
 		    return;
 		}
-
-		int userId = (int) session.getAttribute("userId");
 				
-		try {
-			if(!item.checkName(name)|| !item.checkNumber(totalNumber)|| !item.checkPrice(price)|| item.checkRepeatedName(name)) {
-				  session.setAttribute("flashType", "error");
-				request.getSession().setAttribute("flashMessage", "No Item Added");
-				response.sendRedirect(request.getContextPath() + "/ItemsController");
-				return;
-			}
+		int userId = (int) objUserId;
+		
+		if(!item.checkName(name) ) {
+			errorKey = "name" ;
+		}else if(!item.checkNumber(totalNumber)){
+			errorKey = "totalNumber";
+		}else if(!item.checkPrice(price)){
+			errorKey = "price";
+		}else if(item.checkRepeatedName(name)) {
+			errorKey = "name" ;
+		}		
+		
+		if(errorKey != null) {
+			ErrorMessages.setErrorMessage(session, errorKey);
+			response.sendRedirect(request.getContextPath() + "/ItemsView/addItems.jsp");
+			return;
+		}
+		
+		if(item.addItems(name , price , totalNumber , userId)) {
 			
-			if(!(item.addItems(name , price , totalNumber , userId))) {
-				session.setAttribute("flashType", "error");
-				request.getSession().setAttribute("flashMessage", "No Item Added");
-				response.sendRedirect(request.getContextPath() + "/ItemsController");
-				return;
-			}
+			
+			
 			session.setAttribute("flashType", "success");
 			request.getSession().setAttribute("flashMessage", "Item Added Successfully");
 			response.sendRedirect(request.getContextPath() + "/ItemsController");
-			
-		} catch (IOException e) {
-			e.printStackTrace();
+		}else {
+			ErrorMessages.setErrorMessage(session, "data");
+			response.sendRedirect(request.getContextPath() +"/ItemsView/addItems.jsp");
 		}
-	
+
 	}
 	
 	
 	
 	
 	
-	private void getItem(HttpServletRequest request, HttpServletResponse response , ItemsImp item) throws IOException {
+	private void getItem(HttpServletRequest request, HttpServletResponse response , ItemsImp item) throws IOException, ServletException {
 		
 		
 		HttpSession session = request.getSession(false);
+		
 		if (session == null || session.getAttribute("userId") == null) {
-		    try {
-		    	response.sendRedirect(request.getContextPath() + "/UsersView/loginUsers.jsp");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+	    	
+	    	HttpSession newSession = request.getSession(true);
+			
+	        ErrorMessages.setErrorMessage(newSession, "session");
+	        
+		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+		    return;
+
+	    }
+		
+		String strId = request.getParameter("id");
+		String actionType = request.getParameter("actiontype");
+		
+		
+		if(strId == null) {
+			ErrorMessages.setErrorMessage(session, "data");
+		    response.sendRedirect(request.getContextPath() + "/errors/itemError.jsp");
 		    return;
 		}
 		
-		int id = Integer.parseInt(request.getParameter("id"));
+		int id = Integer.parseInt(strId);
 		
 		Items itemNew = item.getItem(id);
 		
 		if(itemNew == null) {
-			session.setAttribute("flashType", "error");
-			request.getSession().setAttribute("flashMessage", "Something Went Wrong");
+			
+			ErrorMessages.setErrorMessage(session, "data");
+			response.sendRedirect(request.getContextPath() + "/errors/itemError.jsp");
+			return;
+		}
+	
+		
+		session.setAttribute("item", itemNew);
+		session.setAttribute("itemId", id);
+		session.setAttribute("itemUserId", itemNew.getUserId());
+		
+
+		switch(actionType) {
+		case "updateItem":
+			response.sendRedirect(request.getContextPath() + "/ItemsView/updateItems.jsp");
+			break;
+		case "removeItem":
+			removeItem(request , response , item);
+			break;
+		}
+	
+	}
+	
+	
+	
+	
+	private void removeItem(HttpServletRequest request, HttpServletResponse response,ItemsImp item)throws IOException, ServletException {
+		
+		
+		HttpSession session = request.getSession(false);
+		if (session == null || session.getAttribute("userId") == null) {
+			
+	    	
+	    	HttpSession newSession = request.getSession(true);
+			
+	        ErrorMessages.setErrorMessage(newSession, "session");
+	        
+		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+		    return;
+
+	    }
+		
+		Object objUserId =  session.getAttribute("userId");
+		Object objItemUserID =  session.getAttribute("itemUserId");
+		String strId = request.getParameter("id");
+		
+		if(objUserId == null || objItemUserID == null || strId == null) {
+			ErrorMessages.setErrorMessage(session, "data");
+		    response.sendRedirect(request.getContextPath() + "/errors/itemError.jsp");
+		    return;
+		}
+		
+		
+		int userId = (int) objUserId;
+		int itemUserId = (int) objItemUserID;
+		int id = Integer.parseInt(strId);
+		
+		if(userId != itemUserId) {			
+			ErrorMessages.setErrorMessage(session, "idDelete");
 			response.sendRedirect(request.getContextPath() + "/ItemsController");
 			return;
 		}
 		
-		System.out.println(id);
-		
-		request.setAttribute("item", itemNew);
-		session.setAttribute("itemId", id);
-		try {
-			request.getRequestDispatcher("/ItemsView/updateItems.jsp").forward(request, response);
-		} catch (ServletException | IOException e) {
-			e.printStackTrace();
-		}
-		return;
-	
-	}
-	
-	
-	
-	
-	private void removeItem(HttpServletRequest request, HttpServletResponse response,ItemsImp item) {
-		int id = Integer.parseInt(request.getParameter("id"));
-		
-		
-		HttpSession session = request.getSession(false);
-		if (session == null || session.getAttribute("userId") == null) {
-		    try {
-		    	response.sendRedirect(request.getContextPath() + "/UsersView/loginUsers.jsp");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		    return;
-		}
-		
-		try {
-			if(item.removeItem(id) <= 0) {
-				session.setAttribute("flashType", "error");
-				request.getSession().setAttribute("flashMessage", "No Item Deleted");
-				response.sendRedirect(request.getContextPath() + "/ItemsController");
-				return;
-			}
+		if(item.removeItem(id) >= 0) {
+			
 			session.setAttribute("flashType", "success");
 			request.getSession().setAttribute("flashMessage", "Item Deleted Successfully");
 			response.sendRedirect(request.getContextPath() + "/ItemsController");
-		} catch (IOException e) {
-			e.printStackTrace();
+			return;
+		}else {
+			ErrorMessages.setErrorMessage(session, "data");
+			response.sendRedirect(request.getContextPath() + "/ItemsController");
 		}
+
+	
 	}
 	
 	
@@ -206,45 +298,78 @@ public class ItemsController extends HttpServlet {
 	
 	
 	
-	private void updateItem(HttpServletRequest request, HttpServletResponse response , ItemsImp item) {
+	private void updateItem(HttpServletRequest request, HttpServletResponse response , ItemsImp item) throws IOException {
 		
+		String errorKey = null ;
 	
 		HttpSession session = request.getSession(false);
 		if (session == null || session.getAttribute("userId") == null) {
-		    try {
-		    	response.sendRedirect(request.getContextPath() + "/UsersView/loginUsers.jsp");
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			
+	    	
+	    	HttpSession newSession = request.getSession(true);
+			
+	        ErrorMessages.setErrorMessage(newSession, "session");
+	        
+		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
 		    return;
-		}
+
+	    }
 		
 		String updatedName = request.getParameter("updatedName");
 		String price = request.getParameter("price");
 		String totalNumber = request.getParameter("totalNumber");
-		int id  = (int) session.getAttribute("itemId");
+		
+		Object objId  = session.getAttribute("itemId");
+		Object objUserId =  session.getAttribute("userId");
+		Object objItemUserID =  session.getAttribute("itemUserId");
+		
+		
+		if(objId == null || objUserId == null || objItemUserID == null ) {
+			ErrorMessages.setErrorMessage(session, "data");
+		    response.sendRedirect(request.getContextPath() + "/errors/itemError.jsp");
+		    return;
+		}
+		
+		int id = (int) objId;
+		int userId = (int) objUserId;
+		int itemUserId = (int) objItemUserID;
 		
 		
 		
-		try {
-			if(!item.checkName(updatedName)|| !item.checkNumber(totalNumber)|| !item.checkPrice(price) || item.checkRepeatedName(updatedName)) {
-				  session.setAttribute("flashType", "error");
-				request.getSession().setAttribute("flashMessage", "No Item Updated");
-				response.sendRedirect(request.getContextPath() + "/ItemsController");
-				return;
-			}
-			if(!(item.updateItems(updatedName,price,totalNumber,id))) {
-				  session.setAttribute("flashType", "error");
-				request.getSession().setAttribute("flashMessage", "No Item Updated");
-				response.sendRedirect(request.getContextPath() + "/ItemsController");
-				return;
-			}
+
+		
+		if(userId != itemUserId) {			
+			ErrorMessages.setErrorMessage(session, "idUpdate");
+			response.sendRedirect(request.getContextPath() + "/ItemsController");
+			return;
+		}
+		
+		
+		if(!item.checkName(updatedName)) {
+			errorKey = "name";
+		}else if(!item.checkNumber(totalNumber)) {
+			errorKey = "totalNumber";
+		}else if (!item.checkPrice(price)) {
+			errorKey = "price";
+		}else if (item.checkRepeatedName(updatedName)) {
+			errorKey = "name";
+		}
+		
+		if(errorKey != null) {
+			ErrorMessages.setErrorMessage(session, errorKey);
+			response.sendRedirect(request.getContextPath() + "/ItemsView/updateItems.jsp");
+			return;
+		}
+		
+		
+		if(item.updateItems(updatedName,price,totalNumber,id)) {
 			session.setAttribute("flashType", "success");
 			request.getSession().setAttribute("flashMessage", "Item Updated Successfully");
 			response.sendRedirect(request.getContextPath() + "/ItemsController");
-			
-		} catch (IOException e) {
-			e.printStackTrace();
+			return;
+		}else {
+			ErrorMessages.setErrorMessage(session, "data");
+			response.sendRedirect(request.getContextPath() + "/ItemsView/updateItems.jsp");
 		}
 
 		

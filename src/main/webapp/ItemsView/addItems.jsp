@@ -31,7 +31,7 @@ body {
     max-width: 700px;
     width: 100%;
     background: rgba(255, 255, 255, 0.95);
-    padding: 40px 50px;
+    padding: 40px 50px 80px 50px; /* Increased bottom padding to make room for message */
     border-radius: 20px;
     box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(10px);
@@ -48,6 +48,40 @@ body {
     width: 100%;
     height: 5px;
     background: linear-gradient(90deg, #71b7e6, #9b59b6);
+}
+
+/* Message Styles - Positioned at Bottom Middle */
+.msg-container {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    padding: 12px;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+    z-index: 10;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    animation: slideUp 0.4s ease-out forwards;
+}
+
+.msg-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.msg-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
 }
 
 /* Text heading */
@@ -240,8 +274,7 @@ form {
 /* Responsive design */
 @media (max-width: 700px) {
     .container {
-        padding: 30px 25px;
-        margin: 20px;
+        padding: 30px 25px 80px 25px;
     }
     
     .text {
@@ -273,7 +306,7 @@ form {
     }
     
     .container {
-        padding: 25px 20px;
+        padding: 25px 20px 70px 20px;
     }
     
     .text {
@@ -369,79 +402,95 @@ form {
 
 </head>
 <body>
-<!-- partial:index.partial.html -->
-<div class="container" >
-  <div class="text">
-    Add Item
-  </div>
-  <form id=addItems action="/shopProject/ItemsController" method="POST">
-    <div class="form-row">
-      <div class="input-data">
-        <input type="text" id="name" required name="name">
-        <div class="underline"></div>
-        <label>Name</label>
-      </div>
-      <div class="input-data">
-        <input type="text" id="price" required name="price">
-        <div class="underline"></div>
-        <label>PRICE</label>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="input-data">
-        <input type="text" id= "totalNumber" required name="totalNumber">
-        <div class="underline"></div>
-        <label>TOTAL_NUMBER</label>
-      </div>
 
-    </div>
-    
-    <input type="hidden" required name="action" value="addItem">
-    <input type="submit" value="Add" class="button">
-  </form>
+<div class="container">
+    <div class="text">Add Item</div>
 
-  <p class="back">
-    <a href="${pageContext.request.contextPath}/ItemsController">Back To Items</a>
-  </p>
+    <form id="addItems" action="${pageContext.request.contextPath}/ItemsController" method="POST">
+        <div class="form-row">
+            <div class="input-data">
+                <input type="text" id="name" required name="name">
+                <div class="underline"></div>
+                <label>Name</label>
+            </div>
+            <div class="input-data">
+                <input type="text" id="price" required name="price">
+                <div class="underline"></div>
+                <label>Price</label>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="input-data">
+                <input type="text" id="totalNumber" required name="totalNumber">
+                <div class="underline"></div>
+                <label>Total Number</label>
+            </div>
+        </div>
+        
+        <input type="hidden" name="action" value="addItem">
+        <input type="submit" value="Add" class="button">
+    </form>
+
+    <p class="back">
+        <a href="${pageContext.request.contextPath}/ItemsController">Back To Items</a>
+    </p>
+
+    <% 
+        String flashMessage = (String) session.getAttribute("flashMessage");
+        String errorMessage = (String) session.getAttribute("errorMessage");
+
+        if (flashMessage != null) { 
+    %>
+        <div class="msg-container msg-success" id="notif">
+            <%= flashMessage %>
+        </div>
+    <% 
+        session.removeAttribute("flashMessage"); 
+        } 
+        
+        if (errorMessage != null) { 
+    %>
+        <div class="msg-container msg-error" id="notif">
+            <%= errorMessage %>
+        </div>
+    <% 
+        session.removeAttribute("errorMessage"); 
+        } 
+    %>
   
-  
-  <script>
+    <script>
+        //  AUTO-HIDE NOTIFICATION
+        const notif = document.getElementById('notif');
+        if (notif) {
+            setTimeout(() => {
+                notif.style.transition = "opacity 0.5s ease";
+                notif.style.opacity = "0";
+                setTimeout(() => notif.remove(), 500);
+            }, 4000);
+        }
 
-	function checkPrice(number) {
-	    const regex = /^(?:[1-9]\d*|0?\.\d*[1-9]\d*)$/;
-	    return regex.test(number);
-	}
-	
-	function checkName(name) {
-	    const regex = /^[A-Za-z ]+$/;
-	    return name.length >= 3 &&
-	           /^[A-Z]/.test(name.charAt(0)) &&
-	           regex.test(name);
-	}
-	
-	function checkNumber(number) {
-	    const regex = /^[1-9]\d*$/;
-	    return regex.test(number);
-	}
-	
-	// Validate on submit
-	document.getElementById("addItems").addEventListener("submit", function(event) {
-	
-	    const name = document.getElementById("name").value.trim();
-	    const price = document.getElementById("price").value.trim();
-	    const totalNumber = document.getElementById("totalNumber").value.trim();
-	
-	    if (!checkPrice(price) ||
-	        !checkNumber(totalNumber) ||
-	        !checkName(name)) {
-	
-	        alert("Invalid input! Please check your fields.");
-	        event.preventDefault(); // 🚨 THIS STOPS FORM SUBMISSION
-	    }
-	});
-
-</script>
-  
+        // Validation logic
+		 function checkPrice(number) {
+		    const regex = /^(?:[1-9]\d*|0?\.\d*[1-9]\d*|[1-9]\d*\/[1-9]\d*)$/;
+		    return regex.test(number);
+		}
+        
+        function checkName(name) {
+            const regex = /^[A-Za-z ]+$/;
+            return name.length >= 3 && /^[A-Z]/.test(name.charAt(0)) && regex.test(name);
+        }
+        
+        function checkNumber(number) {
+            return /^[1-9]\d*$/.test(number);
+        }
+        
+        document.getElementById("addItems").addEventListener("submit", function(event) {
+            const name = document.getElementById("name").value.trim();
+            const price = document.getElementById("price").value.trim();
+            const totalNumber = document.getElementById("totalNumber").value.trim();
+ 
+        });
+    </script>
 </div>
 </body>
 </html>

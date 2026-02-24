@@ -107,7 +107,7 @@ public class ItemsImp implements ItemsServices{
 
 	@Override
 	public boolean checkPrice(String price) {
-		String regex = "^(?:[1-9]\\d*|0?\\.\\d*[1-9]\\d*)$";
+		String regex = "^(?:[1-9]\\d*(\\.\\d+)?|0?\\.\\d*[1-9]\\d*)$";
 		return price.matches(regex);
 	}
 	
@@ -144,6 +144,7 @@ public class ItemsImp implements ItemsServices{
 					item.setPrice(resultSet.getString("price"));
 					item.setTotalNumbers(resultSet.getString("totalNumber"));
 					item.setId(id);
+					item.setUserId(resultSet.getInt("user_id"));
 				}
 				return item;
 			}catch(SQLException e) {

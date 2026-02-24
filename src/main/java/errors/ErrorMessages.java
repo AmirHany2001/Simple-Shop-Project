@@ -5,42 +5,33 @@ import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 public class ErrorMessages {
-	public void redirect( HttpServletRequest request, HttpServletResponse response, String type) {
-		
-		
-	    
-		switch (type) {
-		case "firstname":
-			request.setAttribute("FNErrorMessage", "First Name Invalid");
-			break;
-		case "lastname":
-			request.setAttribute("LNErrorMessage", "Last Name Invalid");
-			break;
-		case "username":	
-			request.setAttribute("UNErrorMessage", "User Name Invalid");
-			break;
-		case "email":
-			request.setAttribute("emailErrorMessage", "Email Invalid");
-			break;
-		case "password":
-			request.setAttribute("passwordErrorMessage", "password Invalid");
-			break;
-		case "confirmPW":
-			request.setAttribute("confirmPWErrorMessage", "password Doesn't Match");
-			break;
-		case "data":
-			request.setAttribute("dataErrorMessage", "Something Went Wrong");
-			break;
-		}
-		
-        try {
-			request.getRequestDispatcher("/UsersView/signUp.jsp").forward(request, response);
-		} catch (ServletException | IOException e) {
-			e.printStackTrace();
-		}
-		return;
-	    
-	}
+    // Return the message instead of redirecting inside the helper
+    public static void setErrorMessage(HttpSession session, String type) {
+        String message = switch (type) {
+        	case "login"		 -> "Invalid username or password";
+            case "firstname" 	 -> "First Name Invalid (min 3 chars, start with Capital)";
+            case "lastname"  	 -> "Last Name Invalid";
+            case "username"  	 -> "Username already exists or invalid";
+            case "email"     	 -> "Email is already registered or invalid";
+            case "password"  	 -> "Password must be 6+ chars with uppercase & special char";
+            case "confirmPW" 	 -> "Passwords do not match";
+            case "session"   	 -> "Session Expired";
+            case "ErrorPassword" -> "Wrong Password";
+            case "MatchPW"		 -> "You Have Used This Password Recently";
+            case "delete"		 -> "Something Went Wrong While Deleting Your Account";
+            case "DB"			 -> "Issue With Data Base";
+            case "price"		 -> "Enter Valid Price";
+            case "totalNumber"	 -> "Enter Valid Input";
+            case "name"			 -> "Name Is Not Valid";
+            case "data"			 -> "Something Went Wrong With Your Data";
+            case "idUpdate"		 -> "You Can't Update this Item";
+            case "idDelete"		 -> "You Can't Delete this Item";
+            default         	 -> "An unexpected error occurred";
+        };
+        session.setAttribute("flashMessage", message);
+        session.setAttribute("flashType", "error");
+    }
 }
