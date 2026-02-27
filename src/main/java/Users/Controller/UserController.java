@@ -32,15 +32,10 @@ public class UserController extends HttpServlet {
 		
 		 HttpSession session = request.getSession(false);
 		
-	    if (session == null) {
-	    	
-	    	HttpSession newSession = request.getSession(true);
 			
-	        ErrorMessages.setErrorMessage(newSession, "session");
-		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
-		    return;
-
-	    }
+		if (!checkSession(request, response , session)) {	
+		    	return;
+		}
 		
 		
 		if(dataSource == null ) {
@@ -149,15 +144,10 @@ public class UserController extends HttpServlet {
 	    
 	    HttpSession session = request.getSession(false);
 
-	    if (session == null) {
-	    	
-	    	HttpSession newSession = request.getSession(true);
-			
-	        ErrorMessages.setErrorMessage(newSession, "session");
-		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
-		    return;
-
-	    }
+		
+		if (!checkSession(request, response , session)) {	
+		    	return;
+		}
 	    
         session.removeAttribute("userId"); 
         session.invalidate();
@@ -177,14 +167,9 @@ public class UserController extends HttpServlet {
 		HttpSession session = request.getSession(false);
 		
 	
-		if (session == null || session.getAttribute("userId") == null) {
-			
-			
-			HttpSession newSession = request.getSession(true);
-			
-	        ErrorMessages.setErrorMessage(newSession, "session");
-		    response.sendRedirect(request.getContextPath() +"/errors/serverError.jsp");
-		    return;
+		
+		if (!checkSession(request, response , session)) {	
+		    	return;
 		}
 		
 		int userId = (int)session.getAttribute("userId"); 
@@ -219,11 +204,8 @@ public class UserController extends HttpServlet {
 		
 		HttpSession session = request.getSession(false);
 		
-		if (session == null || session.getAttribute("userId") == null) {	
-				HttpSession newSession = request.getSession(true);
-				errorKey = "session";
-		        ErrorMessages.setErrorMessage(newSession, errorKey);
-		        response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+		
+		if (!checkSession(request, response , session)) {	
 		    	return;
 		}
 		
@@ -308,5 +290,21 @@ public class UserController extends HttpServlet {
 	        ErrorMessages.setErrorMessage(session, "data");
 	        response.sendRedirect(request.getContextPath() + "/UsersView/signUp.jsp");
 	    }
+	}
+	
+	
+	
+	
+	public static boolean checkSession(HttpServletRequest request, HttpServletResponse response,HttpSession session) throws IOException {
+		
+		
+		if (session == null || session.getAttribute("userId") == null) {	
+			HttpSession newSession = request.getSession(true);
+	        ErrorMessages.setErrorMessage(newSession, "session");
+	        response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+	    	return false;
+		}
+		return true;
+		
 	}
 }

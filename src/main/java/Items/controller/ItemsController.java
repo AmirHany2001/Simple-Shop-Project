@@ -17,6 +17,7 @@ import com.mysql.cj.Session;
 import DB.DBConnection;
 import Items.model.Items;
 import Items.services.Implementation.ItemsImp;
+import Users.Controller.UserController;
 import errors.ErrorMessages;
 
 
@@ -38,14 +39,8 @@ public class ItemsController extends HttpServlet {
 		 HttpSession session = request.getSession(false);
 		 
 		
-	    if (session == null) {
-	    	
-	    	HttpSession newSession = request.getSession(true);
-			
-	        ErrorMessages.setErrorMessage(newSession, "session");
-		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+	    if (!UserController.checkSession(request, response , session)) {
 		    return;
-
 	    }
 		
 		
@@ -107,6 +102,10 @@ public class ItemsController extends HttpServlet {
 		
 		
 		HttpSession session = request.getSession(false);
+		
+		if(!UserController.checkSession(request, response , session)) {
+			return;
+		}
     	
 		List<Items> items = item.getItems();
 		
@@ -126,16 +125,8 @@ public class ItemsController extends HttpServlet {
 		
 		HttpSession session = request.getSession(false);
 		
-		
-		
-	    if (session == null || session.getAttribute("userId") == null) {
-	    	
-	    	HttpSession newSession = request.getSession(true);
-			
-	        ErrorMessages.setErrorMessage(newSession, "session");
-		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+	    if (!UserController.checkSession(request, response , session)) {
 		    return;
-
 	    }
 
 		Object objUserId = session.getAttribute("userId");
@@ -187,15 +178,8 @@ public class ItemsController extends HttpServlet {
 		
 		HttpSession session = request.getSession(false);
 		
-		if (session == null || session.getAttribute("userId") == null) {
-	    	
-	    	HttpSession newSession = request.getSession(true);
-			
-	        ErrorMessages.setErrorMessage(newSession, "session");
-	        
-		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+		if (!UserController.checkSession(request, response , session)) {
 		    return;
-
 	    }
 		
 		String strId = request.getParameter("id");
@@ -243,16 +227,8 @@ public class ItemsController extends HttpServlet {
 		
 		
 		HttpSession session = request.getSession(false);
-		if (session == null || session.getAttribute("userId") == null) {
-			
-	    	
-	    	HttpSession newSession = request.getSession(true);
-			
-	        ErrorMessages.setErrorMessage(newSession, "session");
-	        
-		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+		if (!UserController.checkSession(request, response , session)) {
 		    return;
-
 	    }
 		
 		Object objUserId =  session.getAttribute("userId");
@@ -292,27 +268,13 @@ public class ItemsController extends HttpServlet {
 	
 	
 	
-	
-	
-	
-	
-	
-	
 	private void updateItem(HttpServletRequest request, HttpServletResponse response , ItemsImp item) throws IOException {
 		
 		String errorKey = null ;
 	
 		HttpSession session = request.getSession(false);
-		if (session == null || session.getAttribute("userId") == null) {
-			
-	    	
-	    	HttpSession newSession = request.getSession(true);
-			
-	        ErrorMessages.setErrorMessage(newSession, "session");
-	        
-		    response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
+		if (!UserController.checkSession(request, response , session)) {
 		    return;
-
 	    }
 		
 		String updatedName = request.getParameter("updatedName");
@@ -374,5 +336,6 @@ public class ItemsController extends HttpServlet {
 
 		
 	}
+	
 
 }
