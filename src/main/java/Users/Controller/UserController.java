@@ -31,13 +31,7 @@ public class UserController extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
 		 HttpSession session = request.getSession(false);
-		
-			
-		if (!checkSession(request, response , session)) {	
-		    	return;
-		}
-		
-		
+				
 		if(dataSource == null ) {
 			ErrorMessages.setErrorMessage(session, "DB");
 			response.sendRedirect(request.getContextPath() + "/errors/serverError.jsp");
@@ -127,6 +121,8 @@ public class UserController extends HttpServlet {
 	    // 3. Create fresh session and store user data
 	    HttpSession newSession = request.getSession(true);
 	    newSession.setAttribute("userId", user.getId());
+	    newSession.setAttribute("userName", user.getUserName());
+	    
 	    
 	    newSession.setAttribute("flashType", "success");
 	    newSession.setAttribute("flashMessage", "Welcome back, " + user.getUserName() + "!");

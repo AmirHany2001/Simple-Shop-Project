@@ -22,15 +22,17 @@ public class ItemsImp implements ItemsServices{
     }
 
 	@Override
-	public boolean addItems(String name , String price , String totalNumber , int userId) {
-		String query = "insert into Items (name , price , totalNumber , user_id) values (? , ? , ? , ?)";
+	public boolean addItems(String name , String price , String totalNumber , String userName , int userId) {
+		String query = "insert into Items (name , price , totalNumber , user_name , user_id) values (? , ? , ? , ? , ?)";
 		
 		try(Connection connection = db.getConnection();
 		        PreparedStatement stmt = connection.prepareStatement(query)){
 			stmt.setString(1,name);
 			stmt.setString(2, price);
 			stmt.setString(3,totalNumber );
-			stmt.setInt(4,userId);
+			stmt.setString(4,userName);
+			stmt.setInt(5,userId);
+			
 	        int rowsInserted = stmt.executeUpdate();	
 	        return rowsInserted > 0;
 		}catch(SQLException e) {
@@ -76,7 +78,7 @@ public class ItemsImp implements ItemsServices{
 				item.setName(resultSet.getString("name"));
 				item.setPrice(resultSet.getString("price"));
 	            item.setTotalNumbers(resultSet.getString("totalNumber"));
-	            item.setUserId(resultSet.getInt("user_id"));
+	            item.setUserName(resultSet.getString("user_name"));
 	            items.add(item);
 		}	
 		return items;

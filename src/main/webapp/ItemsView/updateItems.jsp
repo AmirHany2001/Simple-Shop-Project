@@ -1,462 +1,255 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Update Item</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
-<style type="text/css">
-  /* Base styles */
-* {
-    margin: 0;
-    padding: 0;
-    outline: none;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-}
+    <meta charset="UTF-8">
+    <title>Update Item</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
+    <style type="text/css">
+        * { margin: 0; padding: 0; outline: none; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
 
-body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 40px;
-    background: linear-gradient(135deg, #71b7e6, #9b59b6);
-    font-family: 'Poppins', sans-serif;
-}
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            /* COOL COLOR GRADIENT: Deep Teal to Arctic Blue */
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+        }
 
-/* Container */
-.container {
-    max-width: 700px;
-    width: 100%;
-    background: rgba(255, 255, 255, 0.95);
-    padding: 40px 50px;
-    border-radius: 20px;
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    position: relative;
-    overflow: hidden;
-}
+        .container {
+            max-width: 800px; /* Slightly wider for the 3-column row */
+            width: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: visible; /* Prevents labels from being cut off when they float up */
+        }
 
-.container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 5px;
-    background: linear-gradient(90deg, #71b7e6, #9b59b6);
-}
+        /* Top Accent */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #2c5364, #00d2ff);
+            border-radius: 20px 20px 0 0;
+        }
 
-/* Text heading */
-.text {
-    font-size: 3rem;
-    font-weight: 700;
-    text-align: center;
-    background: linear-gradient(45deg, #71b7e6, #9b59b6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 50px;
-    letter-spacing: 1px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-}
+        .text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            background: linear-gradient(45deg, #2c5364, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 50px;
+        }
 
-/* Form */
-form {
-    width: 100%;
-}
+        .form-row {
+            display: flex;
+            margin-bottom: 40px;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
 
-/* Form rows */
-.form-row {
-    display: flex;
-    margin-bottom: 40px;
-    flex-wrap: wrap;
-    gap: 30px;
-}
+        .input-data {
+            flex: 1;
+            min-width: 200px;
+            height: 50px;
+            position: relative;
+        }
 
-.form-row .input-data {
-    width: 100%;
-    height: 70px;
-    position: relative;
-    flex: 1;
-    min-width: 250px;
-}
+        .input-data input {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: none;
+            font-size: 1rem;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.12);
+            background: transparent;
+            color: #333;
+            transition: all 0.3s ease;
+        }
 
-/* Input fields */
-.input-data input {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border: none;
-    font-size: 1.1rem;
-    background: transparent;
-    padding-top: 15px;
-    color: #333;
-    border-bottom: 2px solid rgba(0, 0, 0, 0.12);
-    transition: all 0.3s ease;
-}
+        /* Readonly style */
+        .input-data input[readonly] {
+            color: #888;
+            border-bottom: 2px dashed rgba(0, 0, 0, 0.1);
+            cursor: not-allowed;
+        }
 
-.input-data input:focus ~ label,
-.input-data input:valid ~ label {
-    transform: translateY(-35px);
-    font-size: 0.95rem;
-    color: #3498db;
-}
+        .input-data label {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            color: #777;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
 
-.input-data label {
-    position: absolute;
-    bottom: 25px;
-    left: 0;
-    color: #666;
-    font-size: 1.1rem;
-    pointer-events: none;
-    transition: all 0.3s ease;
-    font-weight: 500;
-}
+        .underline {
+            position: absolute;
+            bottom: 0;
+            height: 2px;
+            width: 100%;
+        }
 
-/* Underline animation */
-.input-data .underline {
-    position: absolute;
-    bottom: 0;
-    height: 2px;
-    width: 100%;
-    background: rgba(0, 0, 0, 0.12);
-}
+        .underline:before {
+            content: "";
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            background: #3a7bd5;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
 
-.input-data .underline:before {
-    position: absolute;
-    content: "";
-    height: 100%;
-    width: 100%;
-    background: linear-gradient(90deg, #71b7e6, #9b59b6);
-    transform: scaleX(0);
-    transform-origin: center;
-    transition: transform 0.3s ease;
-}
+        .input-data input:focus ~ label,
+        .input-data input:valid ~ label,
+        .input-data input[readonly] ~ label {
+            transform: translateY(-25px);
+            font-size: 0.85rem;
+            color: #3a7bd5;
+            font-weight: 600;
+        }
 
-.input-data input:focus ~ .underline:before,
-.input-data input:valid ~ .underline:before {
-    transform: scaleX(1);
-}
+        .input-data input:focus ~ .underline:before,
+        .input-data input:valid ~ .underline:before {
+            transform: scaleX(1);
+        }
 
-/* Submit button */
-.button {
-    display: block;
-    width: 100%;
-    max-width: 300px;
-    margin: 60px auto 40px;
-    padding: 18px 30px;
-    font-size: 1.2rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    border: none;
-    border-radius: 50px;
-    cursor: pointer;
-    background: linear-gradient(45deg, #71b7e6, #9b59b6);
-    color: white;
-    transition: all 0.4s ease;
-    box-shadow: 0 10px 30px rgba(113, 183, 230, 0.4);
-    position: relative;
-    overflow: hidden;
-    z-index: 1;
-}
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
 
-.button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, #9b59b6, #71b7e6);
-    transition: all 0.4s ease;
-    z-index: -1;
-}
+        .button {
+            padding: 15px 70px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(45deg, #2c5364, #3a7bd5);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(44, 83, 100, 0.3);
+            transition: 0.3s;
+        }
 
-.button:hover::before {
-    left: 0;
-}
+        .button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(58, 123, 213, 0.4);
+        }
 
-.button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 15px 40px rgba(113, 183, 230, 0.6);
-}
+        .back {
+            text-align: center;
+            margin-top: 30px;
+        }
 
-.button:active {
-    transform: translateY(-1px);
-}
+        .back a {
+            color: #666;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: 0.3s;
+            font-weight: 500;
+        }
 
-/* Back link */
-.back {
-    text-align: center;
-    margin-top: 30px;
-}
+        .back a:hover { color: #3a7bd5; }
 
-.back a {
-    color: #666;
-    text-decoration: none;
-    font-size: 1.1rem;
-    font-weight: 500;
-    position: relative;
-    padding: 10px 20px;
-    transition: all 0.3s ease;
-    display: inline-block;
-}
+        /* Notifications */
+        .msg-container {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 10000;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            animation: slideIn 0.5s ease;
+        }
 
-.back a::before {
-    content: '← ';
-    transition: all 0.3s ease;
-}
+        @keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-.back a:hover {
-    color: #3498db;
-    transform: translateX(-5px);
-}
-
-.back a:hover::before {
-    transform: translateX(-5px);
-}
-
-/* Back link underline */
-.back a::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    width: 0;
-    height: 2px;
-    background: linear-gradient(90deg, #71b7e6, #9b59b6);
-    transition: all 0.3s ease;
-    transform: translateX(-50%);
-}
-
-.back a:hover::after {
-    width: 100%;
-}
-
-/* Responsive design */
-@media (max-width: 700px) {
-    .container {
-        padding: 30px 25px;
-        margin: 20px;
-    }
-    
-    .text {
-        font-size: 2.5rem;
-        margin-bottom: 40px;
-    }
-    
-    .form-row {
-        flex-direction: column;
-        gap: 20px;
-        margin-bottom: 20px;
-    }
-    
-    .form-row .input-data {
-        width: 100%;
-        min-width: 100%;
-    }
-    
-    .button {
-        max-width: 100%;
-        padding: 16px 25px;
-        font-size: 1.1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    body {
-        padding: 20px 10px;
-    }
-    
-    .container {
-        padding: 25px 20px;
-    }
-    
-    .text {
-        font-size: 2rem;
-        margin-bottom: 30px;
-    }
-    
-    .input-data {
-        height: 60px;
-    }
-    
-    .input-data input {
-        font-size: 1rem;
-    }
-    
-    .button {
-        margin: 40px auto 30px;
-        padding: 14px 20px;
-        font-size: 1rem;
-    }
-    
-    .back a {
-        font-size: 1rem;
-    }
-}
-
-/* Animation for form elements */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.container {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-.form-row .input-data {
-    animation: fadeInUp 0.6s ease-out forwards;
-    opacity: 0;
-}
-
-.form-row .input-data:nth-child(1) { animation-delay: 0.1s; }
-.form-row .input-data:nth-child(2) { animation-delay: 0.2s; }
-.form-row .input-data:nth-child(3) { animation-delay: 0.3s; }
-.button { animation: fadeInUp 0.6s ease-out 0.4s forwards; opacity: 0; }
-.back { animation: fadeInUp 0.6s ease-out 0.5s forwards; opacity: 0; }
-
-/* Focus styles */
-.input-data input:focus {
-    border-bottom: 2px solid transparent;
-}
-
-/* Placeholder */
-.input-data input::placeholder {
-    color: transparent;
-}
-
-.input-data input:focus::placeholder {
-    color: #999;
-}
-
-/* Loading animation for submit */
-.button.loading {
-    pointer-events: none;
-    position: relative;
-    color: transparent;
-}
-/* Notification Styles */
-.msg-container {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 15px 30px;
-    border-radius: 10px;
-    color: white;
-    font-weight: 600;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    z-index: 2000;
-}
-.msg-success {
-    background: linear-gradient(45deg, #4CAF50, #8BC34A);
-}
-.msg-error {
-    background: linear-gradient(45deg, #f44336, #FF9800);
-}
-
-.button.loading::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 20px;
-    height: 20px;
-    margin: -10px 0 0 -10px;
-    border: 2px solid white;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-  </style>
+        @media (max-width: 700px) {
+            .form-row { flex-direction: column; gap: 35px; }
+            .container { padding: 30px; }
+        }
+    </style>
 </head>
 <body>
-<!-- partial:index.partial.html -->
-<div class="container">
-  <div class="text">
-    Update Item
-  </div>
-  
-  
-   	<% 
-        String flashMessage = (String) session.getAttribute("flashMessage");
-        String errorMessage = (String) session.getAttribute("errorMessage");
 
-        if (flashMessage != null) { 
+<div class="container">
+    <div class="text">Update Item</div>
+
+    <form id="updateItem" action="${pageContext.request.contextPath}/ItemsController" method="POST">
+        <div class="form-row">    
+            <div class="input-data">
+                <input type="text" id="name" name="name" value="${item.name}" readonly>
+                <div class="underline"></div>
+                <label>Current Name</label>
+            </div>
+            <div class="input-data">
+                <input type="text" id="updatedName" name="updatedName" required autocomplete="off">
+                <div class="underline"></div>
+                <label>New Name</label>
+            </div>
+            <div class="input-data">
+                <input type="number" id="price" name="price" value="${item.price}" required step="0.01" min="0">
+                <div class="underline"></div>
+                <label>Price ($)</label>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="input-data">
+                <input type="number" id="totalNumber" name="totalNumber" value="${item.totalNumbers}" required>
+                <div class="underline"></div>
+                <label>Total Quantity</label>
+            </div>
+        </div>
+
+        <input type="hidden" name="action" value="updateItem">
+        
+        <div class="button-container">
+            <input type="submit" value="Update Item" class="button">
+        </div>
+    </form>
+
+    <div class="back">
+        <a href="${pageContext.request.contextPath}/ItemsController">← Back To Items</a>
+    </div>
+  
+  
+      <% 
+        String flashMsg = (String) session.getAttribute("flashMessage");
+        String flashType = (String) session.getAttribute("flashType");
+        if (flashMsg != null) { 
+            String bgColor = "linear-gradient(45deg, #27ae60, #2ecc71)"; // Default Green
+            String icon = "✓ ";
+            if ("error".equals(flashType)) {
+                bgColor = "linear-gradient(45deg, #c0392b, #e74c3c)"; // Red
+                icon = "⚠ ";
+            }
     %>
-        <div class="msg-container msg-success" id="notif">
-            <%= flashMessage %>
+        <div class="msg-container" id="notif" style="background: <%= bgColor %>;">
+            <%= icon %> <%= flashMsg %>
         </div>
     <% 
         session.removeAttribute("flashMessage"); 
-        } 
-        
-        if (errorMessage != null) { 
+        session.removeAttribute("flashType");
+        }else { }
     %>
-        <div class="msg-container msg-error" id="notif">
-            <%= errorMessage %>
-        </div>
-    <% 
-        session.removeAttribute("errorMessage"); 
-        } 
-    %>
-  
-<form id="updateItem" action="/shopProject/ItemsController" method="POST">
-	<%  session = request.getSession(false);
-		session.getAttribute("item");
-	%>
-    <div class="form-row">    
-        <div class="input-data">
-            <input type="text" id="name" name="name" value="${item.name}" readonly>
-            <div class="underline"></div>
-        </div>
-        <div class="input-data">
-            <input type="text" id="updatedName" required name="updatedName">
-            <div class="underline"></div>
-            <label>UpdatedName</label>
-        </div>
-			<div class="input-data">
-		    <input type="number" id="price" name="price" value="${item.price}" required step="0.01" min="0">
-		    <div class="underline"></div>
-		    <label>PRICE</label>
-		</div>
-	
-	    </div>
-	
-	    <div class="form-row">
-	        <div class="input-data">
-	            <input type="number" id="totalNumber" name="totalNumber" value="${item.totalNumbers}" required>
-	            <div class="underline"></div>
-	            <label>Total Number</label>
-	        </div>
-	
-	        <!-- Correct hidden inputs --> 
-	        <input type="hidden" name="action" value="updateItem">
-    </div>
-
-    <input type="submit" value="Update" class="button">
-</form>
-
-
-  <p class="back">
-    <a href="${pageContext.request.contextPath}/ItemsController">Back To Items</a>
-  </p>
   
   
 </div>

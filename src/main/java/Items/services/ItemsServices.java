@@ -6,7 +6,7 @@ import Items.model.Items;
 
 public interface ItemsServices {
 	
-	boolean addItems(String name , String price , String totalNumber , int userId);
+	boolean addItems(String name , String price , String totalNumber , String userName, int userId);
 	boolean updateItems(String updatedName , String price , String totalNumber , int id);
 	List<Items> getItems();
 	Items getItem(int id);

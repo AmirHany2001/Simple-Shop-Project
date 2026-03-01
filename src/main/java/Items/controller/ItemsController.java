@@ -130,6 +130,7 @@ public class ItemsController extends HttpServlet {
 	    }
 
 		Object objUserId = session.getAttribute("userId");
+		Object objUserName = session.getAttribute("userName");
 		
 		if(objUserId == null) {
 			ErrorMessages.setErrorMessage(session, "data");
@@ -137,6 +138,7 @@ public class ItemsController extends HttpServlet {
 		    return;
 		}
 				
+		String userName = (String) objUserName;
 		int userId = (int) objUserId;
 		
 		if(!item.checkName(name) ) {
@@ -155,7 +157,7 @@ public class ItemsController extends HttpServlet {
 			return;
 		}
 		
-		if(item.addItems(name , price , totalNumber , userId)) {
+		if(item.addItems(name , price , totalNumber , userName , userId)) {
 			
 			
 			

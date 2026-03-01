@@ -7,8 +7,9 @@ public class Items {
     private String price;
     private String totalNumber;
     private int userId;
+    private String userName;
 
-    // Getter for id
+    
     public int getId() {
         return id;
     }
@@ -21,39 +22,48 @@ public class Items {
 		this.userId = userId;
 	}
 
-	// Setter for id
+	
     public void setId(int id) {
         this.id = id;
     }
 
-    // Getter for name
+ 
     public String getName() {
         return name;
     }
 
-    // Setter for name
+ 
     public void setName(String name) {
         this.name = name;
     }
 
-    // Getter for price
+  
     public String getPrice() {
         return price;
     }
 
-    // Setter for price
+
     public void setPrice(String price) {
         this.price = price;
     }
 
-    // Getter for totalNumbers
+ 
     public String getTotalNumbers() {
         return totalNumber;
     }
 
-    // Setter for totalNumbers
+   
     public void setTotalNumbers(String totalNumber) {
         this.totalNumber = totalNumber;
+    }
+    
+    
+    public void setUserName(String userName) {
+    	this.userName = userName;
+    }
+    
+    public String getUserName() {
+    	return userName;
     }
 }
 
