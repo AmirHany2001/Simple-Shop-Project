@@ -40,17 +40,18 @@
         h2 { color: #1e293b; margin-bottom: 0.5rem; font-size: 1.75rem; }
         p.subtitle { color: #64748b; margin-bottom: 2rem; font-size: 0.9rem; }
 
-        /* Flash Message Styling */
-        .flash {
-            padding: 0.8rem;
-            border-radius: 0.5rem;
-            margin-bottom: 1.5rem;
-            font-size: 0.85rem;
-            font-weight: 500;
-            border: 1px solid transparent;
+        .msg-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 10000;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            animation: slideIn 0.5s ease;
         }
-        .flash.error { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
-        .flash.success { background: #dcfce7; color: #15803d; border-color: #bbf7d0; }
 
         .input-group { margin-bottom: 1.2rem; text-align: left; position: relative; }
         
@@ -111,14 +112,6 @@
     <h2>Create Account</h2>
     <p class="subtitle">Join our community today</p>
 
-    <c:if test="${not empty sessionScope.flashMessage}">
-        <div class="flash ${sessionScope.flashType}">
-            ${sessionScope.flashMessage}
-        </div>
-        <c:remove var="flashMessage" scope="session"/>
-        <c:remove var="flashType" scope="session"/>
-    </c:if>
-
     <form id="signupForm" action="${pageContext.request.contextPath}/UserController" method="POST">
         
         <div style="display: flex; gap: 10px;">
@@ -165,7 +158,29 @@
     <p class="footer-link">
         Already have an account? <a href="loginUsers.jsp">Log in</a>
     </p>
-</div>
+
+    <% 
+        String flashMsg = (String) session.getAttribute("flashMessage");
+        String flashType = (String) session.getAttribute("flashType");
+        if (flashMsg != null) { 
+            String bgColor = "linear-gradient(45deg, #27ae60, #2ecc71)"; // Default Green
+            String icon = "✓ ";
+            if ("error".equals(flashType)) {
+                bgColor = "linear-gradient(45deg, #c0392b, #e74c3c)"; // Red
+                icon = "⚠ ";
+            }
+    %>
+        <div class="msg-container" id="notif" style="background: <%= bgColor %>;">
+            <%= icon %> <%= flashMsg %>
+        </div>
+    <% 
+        session.removeAttribute("flashMessage"); 
+        session.removeAttribute("flashType");
+        }else { }
+    %>
+
+</div> 
+
 
 <script>
     function toggle(id) {
@@ -191,7 +206,17 @@
 
         btn.disabled = !isValid;
     });
+    // Auto-hide notification
+    const notif = document.getElementById('notif');
+    if (notif) {
+        setTimeout(() => {
+            notif.style.transition = "opacity 0.5s ease";
+            notif.style.opacity = "0";
+            setTimeout(() => notif.remove(), 500);
+        }, 4000);
+    }
 </script>
+
 
 </body>
 </html>
